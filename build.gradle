@@ -53,7 +53,7 @@ java {
 }
 
 jar {
-	archiveFileName.set("${project.archives_base_name}-${project.version}-Fabric.jar")
+	archiveFileName.set("${project.archives_base_name}-${project.version}.jar")
 
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
