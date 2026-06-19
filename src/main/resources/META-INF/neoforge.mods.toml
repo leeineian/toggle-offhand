@@ -1,0 +1,20 @@
+modLoader="javafml"
+loaderVersion="[2,)"
+license="MIT"
+
+[[mods]]
+modId="toggle_offhand"
+version="${version}"
+displayName="Toggle Offhand"
+authors="leeineian"
+description="Minimalist client mod to toggle rendering the offhand with a keybind."
+
+[[mixins]]
+config="toggle_offhand.mixins.json"
+
+[[dependencies.toggle_offhand]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.21,)"
+ordering="NONE"
+side="CLIENT"

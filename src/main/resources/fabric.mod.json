@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "toggle_offhand",
+	"version": "${version}",
+	"name": "Toggle Offhand",
+	"description": "Minimalist client mod to toggle rendering the offhand with a keybind.",
+	"authors": [
+		"leeineian"
+	],
+	"contact": {
+		"homepage": "https://github.com/leeineian/toggle-offhand",
+		"sources": "https://github.com/leeineian/toggle-offhand",
+		"issues": "https://github.com/leeineian/toggle-offhand/issues"
+	},
+	"license": "MIT",
+	"icon": "assets/toggle_offhand/icon.png",
+	"environment": "client",
+	"entrypoints": {
+	},
+	"mixins": [
+		"toggle_offhand.mixins.json"
+	],
+	"depends": {
+		"minecraft": "${minecraft}"
+	}
+}
