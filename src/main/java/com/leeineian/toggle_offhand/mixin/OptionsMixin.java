@@ -25,7 +25,14 @@ public class OptionsMixin {
         } else {
             ToggleOffhand.loadConfig(minecraft.gameDirectory);
         }
-        if (!ToggleOffhand.isForgeRegistered) {
+        boolean isForge = false;
+        try {
+            Class.forName("net.minecraftforge.client.event.RegisterKeyMappingsEvent");
+            isForge = true;
+        } catch (ClassNotFoundException e) {
+            // Not on Forge
+        }
+        if (!isForge) {
             KeyMapping[] original = this.keyMappings;
             KeyMapping[] copy = Arrays.copyOf(original, original.length + 1);
             copy[original.length] = ToggleOffhand.keyMapping;
