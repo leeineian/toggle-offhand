@@ -23,12 +23,15 @@ public abstract class ItemInHandRendererMixin {
 
     @Inject(method = "submitArmWithItem", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
     private void submitArmWithItem(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float swingProgress, ItemStack itemStack, float equippedProgress, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, int combinedLight, CallbackInfo ci) {
+        ToggleOffhand.LOGGER.info("submitArmWithItem invoked: hand={}, item={}, doubleHands={}", 
+                interactionHand, itemStack.getItem(), ToggleOffhand.doubleHands);
         if (ToggleOffhand.doubleHands) {
             boolean mainHand = interactionHand == InteractionHand.MAIN_HAND;
             Item mainHandItem = abstractClientPlayer.getMainHandItem().getItem();
             String mainHandItemId = BuiltInRegistries.ITEM.getKey(mainHandItem).toString();
             HumanoidArm offArm = mainHand ? abstractClientPlayer.getMainArm() : abstractClientPlayer.getMainArm().getOpposite();
             if (itemStack.isEmpty() && !"minecraft:filled_map".equals(mainHandItemId) && (!mainHand && !abstractClientPlayer.isInvisible())) {
+                ToggleOffhand.LOGGER.info("Rendering empty player arm for offhand!");
                 this.renderPlayerArm(poseStack, submitNodeCollector, combinedLight, equippedProgress, swingProgress, offArm);
             }
         }
