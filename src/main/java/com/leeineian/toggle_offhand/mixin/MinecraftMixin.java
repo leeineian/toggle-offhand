@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MinecraftMixin {
     @Inject(method = "handleKeybinds", at = @At("HEAD"))
     private void onHandleKeybinds(CallbackInfo ci) {
+        ToggleOffhand.LOGGER.info("onHandleKeybinds called! keyMapping: {}", ToggleOffhand.keyMapping);
         if (ToggleOffhand.keyMapping != null) {
             // Log when key is pressed/detected
             if (ToggleOffhand.keyMapping.isDown()) {
