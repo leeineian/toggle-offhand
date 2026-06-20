@@ -55,6 +55,12 @@ java {
 jar {
 	archiveFileName.set("${project.archives_base_name}-${project.version}.jar")
 
+	manifest {
+		attributes([
+			"MixinConfigs": "toggle_offhand.mixins.json"
+		])
+	}
+
 	from("LICENSE") {
 		rename { "${it}_${project.base.archivesName.get()}"}
 	}
