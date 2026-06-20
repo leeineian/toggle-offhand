@@ -16,9 +16,6 @@
 	"icon": "assets/toggle_offhand/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"client": [
-			"com.leeineian.toggle_offhand.ToggleOffhandFabric::init"
-		]
 	},
 	"mixins": [
 		"toggle_offhand.mixins.json"
