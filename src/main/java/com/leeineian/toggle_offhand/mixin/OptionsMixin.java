@@ -22,6 +22,8 @@ public class OptionsMixin {
     private void onInit(Minecraft minecraft, File file, CallbackInfo ci) {
         if (ToggleOffhand.keyMapping == null) {
             ToggleOffhand.init(minecraft);
+        } else {
+            ToggleOffhand.loadConfig(minecraft.gameDirectory);
         }
         KeyMapping[] original = this.keyMappings;
         KeyMapping[] copy = Arrays.copyOf(original, original.length + 1);

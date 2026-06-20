@@ -13,7 +13,12 @@ public class MinecraftMixin {
     @Inject(method = "handleKeybinds", at = @At("HEAD"))
     private void onHandleKeybinds(CallbackInfo ci) {
         if (ToggleOffhand.keyMapping != null) {
+            // Log when key is pressed/detected
+            if (ToggleOffhand.keyMapping.isDown()) {
+                ToggleOffhand.LOGGER.info("ToggleOffhand keyMapping is down!");
+            }
             while (ToggleOffhand.keyMapping.consumeClick()) {
+                ToggleOffhand.LOGGER.info("ToggleOffhand keyMapping click consumed!");
                 ToggleOffhand.doubleHands = !ToggleOffhand.doubleHands;
                 ToggleOffhand.saveConfig(((Minecraft) (Object) this).gameDirectory);
 
