@@ -5,12 +5,12 @@ import com.mojang.blaze3d.platform.InputConstants;
 import org.lwjgl.glfw.GLFW;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.eventbus.api.IEventBus;
 
 @net.minecraftforge.fml.common.Mod("toggle_offhand")
 public class ToggleOffhandForge {
-    public ToggleOffhandForge() {
-        FMLJavaModLoadingContext.get().getModEventBus().register(ToggleOffhandForge.class);
+    public ToggleOffhandForge(IEventBus modEventBus) {
+        modEventBus.register(ToggleOffhandForge.class);
     }
 
     @SubscribeEvent
