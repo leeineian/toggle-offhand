@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(targets = "net.minecraftforge.client.event.RegisterKeyMappingsEvent", remap = false)
 public class RegisterKeyMappingsEventMixin {
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(CallbackInfo ci) {
+    private void onInit(java.util.List<KeyMapping> keyMappings, CallbackInfo ci) {
         try {
             if (ToggleOffhand.keyMapping == null) {
                 ToggleOffhand.keyMapping = new KeyMapping(
@@ -23,7 +23,7 @@ public class RegisterKeyMappingsEventMixin {
                 );
             }
             this.getClass().getMethod("register", KeyMapping.class).invoke(this, ToggleOffhand.keyMapping);
-            ToggleOffhand.LOGGER.info("Successfully registered key mapping with Forge RegisterKeyMappingsEvent");
+            ToggleOffhand.LOGGER.info("Successfully registered key mapping with Forge RegisterKeyMappingsEvent via List constructor");
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to register key mapping with Forge RegisterKeyMappingsEvent: ", e);
         }
