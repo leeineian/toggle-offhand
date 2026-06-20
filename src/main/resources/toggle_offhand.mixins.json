@@ -5,8 +5,7 @@
 	"mixins": [
 		"ItemInHandRendererMixin",
 		"MinecraftMixin",
-		"OptionsMixin",
-		"RegisterKeyMappingsEventMixin"
+		"OptionsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
