@@ -27,6 +27,7 @@ public class ToggleOffhandForge {
                         );
                     }
                     event.getClass().getMethod("register", KeyMapping.class).invoke(event, ToggleOffhand.keyMapping);
+                    ToggleOffhand.isForgeRegistered = true;
                     ToggleOffhand.LOGGER.info("Registered keybind via Forge RegisterKeyMappingsEvent reflectively!");
                 } catch (Exception e) {
                     ToggleOffhand.LOGGER.error("Failed to register key mapping in event: ", e);
@@ -52,7 +53,6 @@ public class ToggleOffhandForge {
                     if (ToggleOffhand.keyMapping != null) {
                         while (ToggleOffhand.keyMapping.consumeClick()) {
                             ToggleOffhand.doubleHands = !ToggleOffhand.doubleHands;
-                            ToggleOffhand.LOGGER.info("Toggled offhand via Forge client tick, new state: " + ToggleOffhand.doubleHands);
                             ToggleOffhand.saveConfig(net.minecraft.client.Minecraft.getInstance().gameDirectory);
 
                             if (net.minecraft.client.Minecraft.getInstance().player != null) {

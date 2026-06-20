@@ -25,9 +25,11 @@ public class OptionsMixin {
         } else {
             ToggleOffhand.loadConfig(minecraft.gameDirectory);
         }
-        KeyMapping[] original = this.keyMappings;
-        KeyMapping[] copy = Arrays.copyOf(original, original.length + 1);
-        copy[original.length] = ToggleOffhand.keyMapping;
-        this.keyMappings = copy;
+        if (!ToggleOffhand.isForgeRegistered) {
+            KeyMapping[] original = this.keyMappings;
+            KeyMapping[] copy = Arrays.copyOf(original, original.length + 1);
+            copy[original.length] = ToggleOffhand.keyMapping;
+            this.keyMappings = copy;
+        }
     }
 }
