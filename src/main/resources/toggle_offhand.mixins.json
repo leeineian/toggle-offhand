@@ -4,8 +4,7 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"ItemInHandRendererMixin",
-		"MinecraftMixin",
-		"OptionsMixin"
+		"MinecraftMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

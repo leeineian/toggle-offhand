@@ -18,7 +18,6 @@ public class ToggleOffhand {
 
     public static boolean doubleHands = true;
     public static KeyMapping keyMapping;
-    public static boolean isForgeRegistered = false;
 
     public static void init(Minecraft minecraft) {
         LOGGER.info("Initializing Toggle Offhand...");

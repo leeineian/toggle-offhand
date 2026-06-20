@@ -18,6 +18,7 @@ public class ToggleOffhandForge {
             // Set up the listener callback
             java.util.function.Consumer<Object> handler = event -> {
                 try {
+                    ToggleOffhand.loadConfig(net.minecraft.client.Minecraft.getInstance().gameDirectory);
                     if (ToggleOffhand.keyMapping == null) {
                         ToggleOffhand.keyMapping = new KeyMapping(
                                 "key.toggle_offhand",
@@ -27,7 +28,6 @@ public class ToggleOffhandForge {
                         );
                     }
                     event.getClass().getMethod("register", KeyMapping.class).invoke(event, ToggleOffhand.keyMapping);
-                    ToggleOffhand.isForgeRegistered = true;
                     ToggleOffhand.LOGGER.info("Registered keybind via Forge RegisterKeyMappingsEvent reflectively!");
                 } catch (Exception e) {
                     ToggleOffhand.LOGGER.error("Failed to register key mapping in event: ", e);
