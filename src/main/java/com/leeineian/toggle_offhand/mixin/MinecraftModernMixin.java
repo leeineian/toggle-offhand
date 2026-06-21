@@ -7,9 +7,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net.minecraft.class_310")
-public class MinecraftMixin {
-    @Inject(method = {"handleKeybinds", "method_1508"}, remap = false, require = 0, expect = 0, at = @At("HEAD"))
+@Mixin(targets = "net.minecraft.client.Minecraft", remap = false)
+public class MinecraftModernMixin {
+    @Inject(method = "handleKeybinds", require = 0, expect = 0, at = @At("HEAD"))
     private void onHandleKeybinds(CallbackInfo ci) {
         if (ToggleOffhand.keyMapping != null) {
             while (ClientCompat.consumeClick(ToggleOffhand.keyMapping)) {

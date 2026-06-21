@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.io.File;
 import java.util.Arrays;
 
-@Mixin(targets = "net.minecraft.class_315")
-public class OptionsMixin {
+@Mixin(targets = "net.minecraft.client.Options", remap = false)
+public class OptionsModernMixin {
     private static java.lang.reflect.Field keyMappingsField = null;
 
     private static Object[] getKeyMappings(Object options) {
@@ -60,7 +60,7 @@ public class OptionsMixin {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     private void onInit(@Coerce Object minecraft, File file, CallbackInfo ci) {
-        ToggleOffhand.LOGGER.info("OptionsMixin onInit starting...");
+        ToggleOffhand.LOGGER.info("OptionsModernMixin onInit starting...");
         File gameDir = ClientCompat.getGameDirectory(minecraft);
         ClientCompat.gameDirectory = gameDir;
         ClientCompat.injectTranslations();

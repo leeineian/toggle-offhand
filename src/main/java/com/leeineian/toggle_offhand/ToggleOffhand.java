@@ -1,9 +1,6 @@
 package com.leeineian.toggle_offhand;
 
-import net.minecraft.client.KeyMapping;
-import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.Minecraft;
-import org.lwjgl.glfw.GLFW;
+import com.leeineian.toggle_offhand.compat.ClientCompat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,21 +14,18 @@ public class ToggleOffhand {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static boolean doubleHands = true;
-    public static KeyMapping keyMapping;
+    public static Object keyMapping;
 
-    public static void init(Minecraft minecraft) {
-        LOGGER.info("Initializing Toggle Offhand...");
-        loadConfig(minecraft.gameDirectory);
+    public static Object createKeyMapping(String name, int keycode, String category) {
+        return ClientCompat.createKeyMapping(name, keycode, category);
+    }
 
-        keyMapping = new KeyMapping(
-                "key.toggle_offhand",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_UNKNOWN,
-                KeyMapping.Category.MISC
-        );
+    public static boolean consumeClick(Object mapping) {
+        return ClientCompat.consumeClick(mapping);
     }
 
     public static void loadConfig(File gameDirectory) {
+        if (gameDirectory == null) return;
         File configFile = new File(new File(gameDirectory, "config"), "toggle_offhand.properties");
         if (configFile.exists()) {
             Properties props = new Properties();
@@ -47,6 +41,7 @@ public class ToggleOffhand {
     }
 
     public static void saveConfig(File gameDirectory) {
+        if (gameDirectory == null) return;
         File configDir = new File(gameDirectory, "config");
         if (!configDir.exists()) {
             configDir.mkdirs();
@@ -59,5 +54,13 @@ public class ToggleOffhand {
         } catch (Exception e) {
             LOGGER.error("Failed to save config: ", e);
         }
+    }
+
+    public static void injectTranslations() {
+        ClientCompat.injectTranslations();
+    }
+
+    public static String getTranslation(String key) {
+        return ClientCompat.getTranslation(key);
     }
 }

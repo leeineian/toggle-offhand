@@ -2,10 +2,21 @@
 	"required": true,
 	"package": "com.leeineian.toggle_offhand.mixin",
 	"compatibilityLevel": "JAVA_21",
+	"refmap": "toggle_offhand-refmap.json",
+	"plugin": "com.leeineian.toggle_offhand.mixin.ToggleOffhandMixinPlugin",
 	"mixins": [
+		"ItemInHandRendererLegacyMixin",
 		"ItemInHandRendererMixin",
 		"MinecraftMixin",
-		"OptionsMixin"
+		"OptionsMixin",
+		"LanguageMixin",
+		"ClientLanguageMixin",
+		"ItemInHandRendererLegacyModernMixin",
+		"ItemInHandRendererModernMixin",
+		"MinecraftModernMixin",
+		"OptionsModernMixin",
+		"LanguageModernMixin",
+		"ClientLanguageModernMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

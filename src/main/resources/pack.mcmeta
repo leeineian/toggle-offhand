@@ -3,8 +3,8 @@
     "description": "Resources for Toggle Offhand",
     "pack_format": 48,
     "supported_formats": {
-      "min_format": 15,
-      "max_format": 99
+      "min_inclusive": 15,
+      "max_inclusive": 99
     }
   }
 }
