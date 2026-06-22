@@ -61,13 +61,33 @@ public abstract class ItemInHandRendererModernMixin {
         }
     }
 
-    @Inject(method = "submitArmWithItem", require = 0, expect = 0, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
+    @Inject(method = {"submitArmWithItem", "m_319808_"}, remap = false, require = 0, expect = 0, at = {
+        @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER),
+        @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;m_85836_()V", shift = At.Shift.AFTER)
+    })
     private void submitArmWithItem(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float swingProgress, ItemStack itemStack, float equippedProgress, PoseStack poseStack, @Coerce Object submitNodeCollector, int combinedLight, CallbackInfo ci) {
         this.handleModernRender(abstractClientPlayer, interactionHand, itemStack, poseStack, submitNodeCollector, combinedLight, equippedProgress, swingProgress);
     }
 
-    @Inject(method = "renderArmWithItem", require = 0, expect = 0, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
+    @Inject(method = {"renderArmWithItem", "m_109371_"}, remap = false, require = 0, expect = 0, at = {
+        @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER),
+        @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;m_85836_()V", shift = At.Shift.AFTER)
+    })
     private void renderArmWithItem(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float swingProgress, ItemStack itemStack, float equippedProgress, PoseStack poseStack, @Coerce Object submitNodeCollector, int combinedLight, CallbackInfo ci) {
         this.handleModernRender(abstractClientPlayer, interactionHand, itemStack, poseStack, submitNodeCollector, combinedLight, equippedProgress, swingProgress);
+    }
+
+    @Inject(method = {"submitArmWithItem", "m_319808_"}, remap = false, require = 0, expect = 0, cancellable = true, at = @At("HEAD"))
+    private void onSubmitArmWithItem(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float swingProgress, ItemStack itemStack, float equippedProgress, PoseStack poseStack, @Coerce Object submitNodeCollector, int combinedLight, CallbackInfo ci) {
+        if (!ToggleOffhand.doubleHands && interactionHand == InteractionHand.OFF_HAND) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = {"renderArmWithItem", "m_109371_"}, remap = false, require = 0, expect = 0, cancellable = true, at = @At("HEAD"))
+    private void onRenderArmWithItem(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float swingProgress, ItemStack itemStack, float equippedProgress, PoseStack poseStack, @Coerce Object submitNodeCollector, int combinedLight, CallbackInfo ci) {
+        if (!ToggleOffhand.doubleHands && interactionHand == InteractionHand.OFF_HAND) {
+            ci.cancel();
+        }
     }
 }

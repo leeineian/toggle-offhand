@@ -3,12 +3,6 @@ package com.leeineian.toggle_offhand.mixin;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.leeineian.toggle_offhand.ToggleOffhand;
 import com.leeineian.toggle_offhand.compat.ClientCompat;
-import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
@@ -19,11 +13,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ItemInHandRendererLegacyModernMixin {
     private static java.lang.reflect.Method renderPlayerArmMethod = null;
 
-    private void invokeRenderPlayerArm(Object instance, PoseStack poseStack, Object buffer, int combinedLight, float equippedProgress, float swingProgress, HumanoidArm side) {
+    private void invokeRenderPlayerArm(Object instance, PoseStack poseStack, Object buffer, int combinedLight, float equippedProgress, float swingProgress, Object side) {
         if (renderPlayerArmMethod == null) {
             try {
                 for (java.lang.reflect.Method m : instance.getClass().getDeclaredMethods()) {
-                    Class<?>[] types = m.getParameterTypes();
+                    Class<?> [] types = m.getParameterTypes();
                     if (types.length == 6 &&
                         (types[0].getName().endsWith(".PoseStack") || types[0].getName().endsWith(".class_4587")) &&
                         (types[1].getName().endsWith(".MultiBufferSource") || types[1].getName().endsWith(".class_4597")) &&
@@ -35,6 +29,9 @@ public abstract class ItemInHandRendererLegacyModernMixin {
                         renderPlayerArmMethod = m;
                         break;
                     }
+                }
+                if (renderPlayerArmMethod == null) {
+                    ToggleOffhand.LOGGER.warn("Could not find renderPlayerArm method reflectively among declared methods!");
                 }
             } catch (Exception e) {
                 ToggleOffhand.LOGGER.error("Failed to find renderPlayerArm method reflectively", e);
@@ -49,20 +46,36 @@ public abstract class ItemInHandRendererLegacyModernMixin {
         }
     }
 
-    private void handleLegacyRender(AbstractClientPlayer abstractClientPlayer, InteractionHand interactionHand, ItemStack itemStack, PoseStack poseStack, Object bufferSource, int combinedLight, float equippedProgress, float swingProgress) {
+    private void handleLegacyRender(Object abstractClientPlayer, Object interactionHand, Object itemStack, PoseStack poseStack, Object bufferSource, int combinedLight, float equippedProgress, float swingProgress) {
         if (ToggleOffhand.doubleHands) {
-            boolean mainHand = interactionHand == InteractionHand.MAIN_HAND;
-            Item mainHandItem = abstractClientPlayer.getMainHandItem().getItem();
+            boolean mainHand = interactionHand != null && interactionHand.toString().equals("MAIN_HAND");
+            Object mainHandItemStack = ClientCompat.getMainHandItem(abstractClientPlayer);
+            Object mainHandItem = ClientCompat.getItemStackItem(mainHandItemStack);
             String mainHandItemId = ClientCompat.getItemId(mainHandItem);
-            HumanoidArm offArm = mainHand ? abstractClientPlayer.getMainArm() : abstractClientPlayer.getMainArm().getOpposite();
-            if (itemStack.isEmpty() && !"minecraft:filled_map".equals(mainHandItemId) && (!mainHand && !abstractClientPlayer.isInvisible())) {
+            Object mainArm = ClientCompat.getMainArm(abstractClientPlayer);
+            Object offArm = mainHand ? mainArm : ClientCompat.getOppositeArm(mainArm);
+
+            boolean itemEmpty = ClientCompat.isItemStackEmpty(itemStack);
+            boolean invisible = ClientCompat.isEntityInvisible(abstractClientPlayer);
+
+            if (itemEmpty && !"minecraft:filled_map".equals(mainHandItemId) && (!mainHand && !invisible)) {
                 this.invokeRenderPlayerArm(this, poseStack, bufferSource, combinedLight, equippedProgress, swingProgress, offArm);
             }
         }
     }
 
-    @Inject(method = "renderArmWithItem", require = 0, expect = 0, at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER))
-    private void renderArmWithItem(AbstractClientPlayer abstractClientPlayer, float f, float g, InteractionHand interactionHand, float swingProgress, ItemStack itemStack, float equippedProgress, PoseStack poseStack, @Coerce Object bufferSource, int combinedLight, CallbackInfo ci) {
+    @Inject(method = {"renderArmWithItem", "m_109371_", "method_3228", "method_22920"}, remap = false, require = 0, expect = 0, at = {
+        @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;pushPose()V", shift = At.Shift.AFTER),
+        @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;m_85836_()V", shift = At.Shift.AFTER)
+    })
+    private void renderArmWithItem(@Coerce Object abstractClientPlayer, float f, float g, @Coerce Object interactionHand, float swingProgress, @Coerce Object itemStack, float equippedProgress, PoseStack poseStack, @Coerce Object bufferSource, int combinedLight, CallbackInfo ci) {
         this.handleLegacyRender(abstractClientPlayer, interactionHand, itemStack, poseStack, bufferSource, combinedLight, equippedProgress, swingProgress);
+    }
+
+    @Inject(method = {"renderArmWithItem", "m_109371_", "method_3228", "method_22920"}, remap = false, require = 0, expect = 0, cancellable = true, at = @At("HEAD"))
+    private void onRenderArmWithItem(@Coerce Object abstractClientPlayer, float f, float g, @Coerce Object interactionHand, float swingProgress, @Coerce Object itemStack, float equippedProgress, PoseStack poseStack, @Coerce Object bufferSource, int combinedLight, CallbackInfo ci) {
+        if (!ToggleOffhand.doubleHands && interactionHand != null && interactionHand.toString().equals("OFF_HAND")) {
+            ci.cancel();
+        }
     }
 }

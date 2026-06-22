@@ -17,20 +17,30 @@ public class OptionsMixin {
 
     private static Object[] getKeyMappings(Object options) {
         if (keyMappingsField == null) {
-            ToggleOffhand.LOGGER.info("Scanning fields in " + options.getClass().getName());
-            for (java.lang.reflect.Field f : options.getClass().getDeclaredFields()) {
-                Class<?> type = f.getType();
-                if (type.isArray()) {
-                    Class<?> comp = type.getComponentType();
-                    if (comp.getName().endsWith(".KeyMapping") || comp.getName().endsWith(".class_304")) {
-                        if (f.getName().equals("allKeys") || f.getName().equals("field_1839") || f.getName().equals("keyMappings") || f.getName().equals("keyBindings")) {
+            Class<?> current = options.getClass();
+            outerLoop:
+            while (current != null && current != Object.class) {
+                ToggleOffhand.LOGGER.info("Scanning fields in class: " + current.getName());
+                for (java.lang.reflect.Field f : current.getDeclaredFields()) {
+                    Class<?> type = f.getType();
+                    if (type.isArray()) {
+                        Class<?> comp = type.getComponentType();
+                        if (comp.getName().endsWith(".KeyMapping") || comp.getName().endsWith(".class_304")) {
                             f.setAccessible(true);
-                            keyMappingsField = f;
-                            ToggleOffhand.LOGGER.info("Matched keyMappings field: " + f.getName());
-                            break;
+                            try {
+                                Object[] arr = (Object[]) f.get(options);
+                                if (arr != null && arr.length > 30) {
+                                    keyMappingsField = f;
+                                    ToggleOffhand.LOGGER.info("Matched keyMappings field: " + f.getName() + " of length " + arr.length + " in class " + current.getName());
+                                    break outerLoop;
+                                }
+                            } catch (Exception e) {
+                                ToggleOffhand.LOGGER.error("Failed to check field " + f.getName() + " length: ", e);
+                            }
                         }
                     }
                 }
+                current = current.getSuperclass();
             }
         }
         if (keyMappingsField != null) {
@@ -71,6 +81,25 @@ public class OptionsMixin {
             ToggleOffhand.LOGGER.info("Created key mapping: " + ToggleOffhand.keyMapping);
         } else {
             ToggleOffhand.loadConfig(gameDir);
+        }
+
+        // Load key from options.txt
+        if (gameDir != null) {
+            File optionsFile = new File(gameDir, "options.txt");
+            if (optionsFile.exists()) {
+                try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(optionsFile))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("key_key.toggle_offhand:")) {
+                            String keyStr = line.substring(line.indexOf(":") + 1).trim();
+                            ClientCompat.setKeyFromString(ToggleOffhand.keyMapping, keyStr);
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    ToggleOffhand.LOGGER.error("Failed to load key from options.txt: ", e);
+                }
+            }
         }
         
         try {

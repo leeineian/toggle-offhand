@@ -55,7 +55,7 @@ public abstract class ItemInHandRendererLegacyMixin {
         }
     }
 
-    @Inject(method = "renderArmWithItem", remap = false, require = 0, expect = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/class_4587;method_22903()V", shift = At.Shift.AFTER))
+    @Inject(method = {"renderArmWithItem", "m_109371_"}, remap = false, require = 0, expect = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/class_4587;method_22903()V", shift = At.Shift.AFTER))
     private void renderArmWithItem(@Coerce Object abstractClientPlayer, float f, float g, @Coerce Object interactionHand, float swingProgress, @Coerce Object itemStack, float equippedProgress, @Coerce Object poseStack, @Coerce Object bufferSource, int combinedLight, CallbackInfo ci) {
         this.handleLegacyRender(abstractClientPlayer, interactionHand, itemStack, poseStack, bufferSource, combinedLight, equippedProgress, swingProgress);
     }
@@ -63,5 +63,12 @@ public abstract class ItemInHandRendererLegacyMixin {
     @Inject(method = {"method_3228", "method_22920"}, remap = false, require = 0, expect = 0, at = @At(value = "INVOKE", target = "Lnet/minecraft/class_4587;method_22903()V", shift = At.Shift.AFTER))
     private void renderArmWithItemIntermediary(@Coerce Object abstractClientPlayer, float f, float g, @Coerce Object interactionHand, float swingProgress, @Coerce Object itemStack, float equippedProgress, @Coerce Object poseStack, @Coerce Object bufferSource, int combinedLight, CallbackInfo ci) {
         this.handleLegacyRender(abstractClientPlayer, interactionHand, itemStack, poseStack, bufferSource, combinedLight, equippedProgress, swingProgress);
+    }
+
+    @Inject(method = {"renderArmWithItem", "m_109371_", "method_3228", "method_22920"}, remap = false, require = 0, expect = 0, cancellable = true, at = @At("HEAD"))
+    private void onRenderArmWithItem(@Coerce Object abstractClientPlayer, float f, float g, @Coerce Object interactionHand, float swingProgress, @Coerce Object itemStack, float equippedProgress, @Coerce Object poseStack, @Coerce Object bufferSource, int combinedLight, CallbackInfo ci) {
+        if (!ToggleOffhand.doubleHands && interactionHand != null && interactionHand.toString().equals("OFF_HAND")) {
+            ci.cancel();
+        }
     }
 }

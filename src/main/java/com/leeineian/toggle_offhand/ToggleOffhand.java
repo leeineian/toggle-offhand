@@ -13,6 +13,10 @@ public class ToggleOffhand {
     public static final String MOD_ID = "toggle_offhand";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
+    static {
+        com.leeineian.toggle_offhand.compat.VersionMappings.init();
+    }
+
     public static boolean doubleHands = true;
     public static Object keyMapping;
 

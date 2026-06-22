@@ -171,18 +171,8 @@ public class ClientCompat {
 
     private static Object createKey(int keycode) {
         try {
-            Class<?> inputConstantsClass;
-            try {
-                inputConstantsClass = Class.forName("com.mojang.blaze3d.platform.InputConstants");
-            } catch (ClassNotFoundException e) {
-                inputConstantsClass = Class.forName("net.minecraft.class_3675");
-            }
-            try {
-                java.lang.reflect.Method getKeyMethod = inputConstantsClass.getMethod("getKey", int.class, int.class);
-                return getKeyMethod.invoke(null, keycode, 0);
-            } catch (NoSuchMethodException e) {
-                java.lang.reflect.Method getKeyMethod = inputConstantsClass.getMethod("method_15984", int.class, int.class);
-                return getKeyMethod.invoke(null, keycode, 0);
+            if (VersionMappings.GetKeyMethod != null) {
+                return VersionMappings.GetKeyMethod.invoke(null, keycode, 0);
             }
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to create Key object reflectively: ", e);
@@ -202,53 +192,29 @@ public class ClientCompat {
     public static String getItemId(Object item) {
         if (item == null) return "";
         try {
-            Class<?> registriesClass;
-            try {
-                registriesClass = Class.forName("net.minecraft.core.registries.BuiltInRegistries");
-            } catch (ClassNotFoundException e) {
-                try {
-                    registriesClass = Class.forName("net.minecraft.class_7923");
-                } catch (ClassNotFoundException ex) {
-                    registriesClass = Class.forName("net.minecraft.class_7910");
-                }
-            }
-            java.lang.reflect.Field itemField = null;
-            try {
-                itemField = registriesClass.getField("ITEM");
-            } catch (NoSuchFieldException e) {
-                try {
-                    itemField = registriesClass.getField("field_41178");
-                } catch (NoSuchFieldException ex) {
-                    for (java.lang.reflect.Field f : registriesClass.getDeclaredFields()) {
-                        if (f.getName().equals("ITEM") || f.getName().equals("field_41178")) {
-                            itemField = f;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (itemField != null) {
-                itemField.setAccessible(true);
-                Object registry = itemField.get(null);
-                java.lang.reflect.Method getKeyMethod = null;
-                Class<?> current = registry.getClass();
-                while (current != null && current != Object.class) {
-                    for (java.lang.reflect.Method m : current.getMethods()) {
-                        if (m.getName().equals("getKey") || m.getName().equals("method_10221")) {
-                            if (m.getParameterTypes().length == 1) {
-                                getKeyMethod = m;
-                                break;
+            if (VersionMappings.ItemRegistryField != null) {
+                Object registry = VersionMappings.ItemRegistryField.get(null);
+                if (registry != null) {
+                    java.lang.reflect.Method getKeyMethod = null;
+                    Class<?> current = registry.getClass();
+                    while (current != null && current != Object.class) {
+                        for (java.lang.reflect.Method m : current.getMethods()) {
+                            if (m.getName().equals("getKey") || m.getName().equals("method_10221")) {
+                                if (m.getParameterTypes().length == 1) {
+                                    getKeyMethod = m;
+                                    break;
+                                }
                             }
                         }
+                        if (getKeyMethod != null) break;
+                        current = current.getSuperclass();
                     }
-                    if (getKeyMethod != null) break;
-                    current = current.getSuperclass();
-                }
-                if (getKeyMethod != null) {
-                    getKeyMethod.setAccessible(true);
-                    Object loc = getKeyMethod.invoke(registry, item);
-                    if (loc != null) {
-                        return loc.toString();
+                    if (getKeyMethod != null) {
+                        getKeyMethod.setAccessible(true);
+                        Object loc = getKeyMethod.invoke(registry, item);
+                        if (loc != null) {
+                            return loc.toString();
+                        }
                     }
                 }
             }
@@ -258,8 +224,52 @@ public class ClientCompat {
         return "";
     }
 
+    private static java.lang.reflect.Field clickCountField = null;
+
     public static boolean consumeClick(Object mapping) {
         if (mapping == null) return false;
+        try {
+            if (clickCountField == null) {
+                Class<?> current = mapping.getClass();
+                while (current != null && current != Object.class) {
+                    // Try by names first
+                    for (String name : new String[]{"clickCount", "timesPressed", "field_1654", "f_90813_"}) {
+                        try {
+                            java.lang.reflect.Field f = current.getDeclaredField(name);
+                            if (f.getType() == int.class && !java.lang.reflect.Modifier.isStatic(f.getModifiers())) {
+                                f.setAccessible(true);
+                                clickCountField = f;
+                                break;
+                            }
+                        } catch (NoSuchFieldException ignored) {}
+                    }
+                    if (clickCountField != null) break;
+
+                    // Fallback to first non-static int field
+                    for (java.lang.reflect.Field f : current.getDeclaredFields()) {
+                        if (f.getType() == int.class && !java.lang.reflect.Modifier.isStatic(f.getModifiers())) {
+                            f.setAccessible(true);
+                            clickCountField = f;
+                            break;
+                        }
+                    }
+                    if (clickCountField != null) break;
+                    current = current.getSuperclass();
+                }
+            }
+            if (clickCountField != null) {
+                int count = clickCountField.getInt(mapping);
+                if (count > 0) {
+                    clickCountField.setInt(mapping, count - 1);
+                    return true;
+                }
+                return false;
+            }
+        } catch (Exception e) {
+            ToggleOffhand.LOGGER.error("Failed to read/write clickCount reflectively: ", e);
+        }
+
+        // Fallback to method invocation
         try {
             java.lang.reflect.Method m = mapping.getClass().getMethod("consumeClick");
             return (Boolean) m.invoke(mapping);
@@ -267,6 +277,13 @@ public class ClientCompat {
             try {
                 java.lang.reflect.Method m = mapping.getClass().getMethod("method_1436");
                 return (Boolean) m.invoke(mapping);
+            } catch (NoSuchMethodException ex) {
+                try {
+                    java.lang.reflect.Method m = mapping.getClass().getMethod("m_90857_");
+                    return (Boolean) m.invoke(mapping);
+                } catch (Exception ex2) {
+                    ToggleOffhand.LOGGER.error("Failed to invoke consumeClick/wasPressed reflectively: ", ex2);
+                }
             } catch (Exception ex) {
                 ToggleOffhand.LOGGER.error("Failed to invoke consumeClick/wasPressed reflectively: ", ex);
             }
@@ -683,14 +700,8 @@ public class ClientCompat {
     public static Object getMainHandItem(Object entity) {
         if (entity == null) return null;
         try {
-            java.lang.reflect.Method m = entity.getClass().getMethod("getMainHandItem");
-            return m.invoke(entity);
-        } catch (NoSuchMethodException e) {
-            try {
-                java.lang.reflect.Method m = entity.getClass().getMethod("method_6047");
-                return m.invoke(entity);
-            } catch (Exception ex) {
-                ToggleOffhand.LOGGER.error("Failed to get main hand item reflectively: ", ex);
+            if (VersionMappings.GetMainHandItemMethod != null) {
+                return VersionMappings.GetMainHandItemMethod.invoke(entity);
             }
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to get main hand item reflectively: ", e);
@@ -701,14 +712,8 @@ public class ClientCompat {
     public static Object getItemStackItem(Object stack) {
         if (stack == null) return null;
         try {
-            java.lang.reflect.Method m = stack.getClass().getMethod("getItem");
-            return m.invoke(stack);
-        } catch (NoSuchMethodException e) {
-            try {
-                java.lang.reflect.Method m = stack.getClass().getMethod("method_7909");
-                return m.invoke(stack);
-            } catch (Exception ex) {
-                ToggleOffhand.LOGGER.error("Failed to get item from stack reflectively: ", ex);
+            if (VersionMappings.GetItemStackItemMethod != null) {
+                return VersionMappings.GetItemStackItemMethod.invoke(stack);
             }
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to get item from stack reflectively: ", e);
@@ -719,14 +724,8 @@ public class ClientCompat {
     public static boolean isItemStackEmpty(Object stack) {
         if (stack == null) return true;
         try {
-            java.lang.reflect.Method m = stack.getClass().getMethod("isEmpty");
-            return (Boolean) m.invoke(stack);
-        } catch (NoSuchMethodException e) {
-            try {
-                java.lang.reflect.Method m = stack.getClass().getMethod("method_7960");
-                return (Boolean) m.invoke(stack);
-            } catch (Exception ex) {
-                ToggleOffhand.LOGGER.error("Failed to check if item stack is empty reflectively: ", ex);
+            if (VersionMappings.IsItemStackEmptyMethod != null) {
+                return (Boolean) VersionMappings.IsItemStackEmptyMethod.invoke(stack);
             }
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to check if item stack is empty reflectively: ", e);
@@ -737,14 +736,8 @@ public class ClientCompat {
     public static Object getMainArm(Object entity) {
         if (entity == null) return null;
         try {
-            java.lang.reflect.Method m = entity.getClass().getMethod("getMainArm");
-            return m.invoke(entity);
-        } catch (NoSuchMethodException e) {
-            try {
-                java.lang.reflect.Method m = entity.getClass().getMethod("method_6068");
-                return m.invoke(entity);
-            } catch (Exception ex) {
-                ToggleOffhand.LOGGER.error("Failed to get main arm reflectively: ", ex);
+            if (VersionMappings.GetMainArmMethod != null) {
+                return VersionMappings.GetMainArmMethod.invoke(entity);
             }
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to get main arm reflectively: ", e);
@@ -755,14 +748,8 @@ public class ClientCompat {
     public static Object getOppositeArm(Object arm) {
         if (arm == null) return null;
         try {
-            java.lang.reflect.Method m = arm.getClass().getMethod("getOpposite");
-            return m.invoke(arm);
-        } catch (NoSuchMethodException e) {
-            try {
-                java.lang.reflect.Method m = arm.getClass().getMethod("method_5928");
-                return m.invoke(arm);
-            } catch (Exception ex) {
-                ToggleOffhand.LOGGER.error("Failed to get opposite arm reflectively: ", ex);
+            if (VersionMappings.GetOppositeArmMethod != null) {
+                return VersionMappings.GetOppositeArmMethod.invoke(arm);
             }
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to get opposite arm reflectively: ", e);
@@ -773,18 +760,43 @@ public class ClientCompat {
     public static boolean isEntityInvisible(Object entity) {
         if (entity == null) return false;
         try {
-            java.lang.reflect.Method m = entity.getClass().getMethod("isInvisible");
-            return (Boolean) m.invoke(entity);
-        } catch (NoSuchMethodException e) {
-            try {
-                java.lang.reflect.Method m = entity.getClass().getMethod("method_5767");
-                return (Boolean) m.invoke(entity);
-            } catch (Exception ex) {
-                ToggleOffhand.LOGGER.error("Failed to check if entity is invisible reflectively: ", ex);
+            if (VersionMappings.IsEntityInvisibleMethod != null) {
+                return (Boolean) VersionMappings.IsEntityInvisibleMethod.invoke(entity);
             }
         } catch (Exception e) {
             ToggleOffhand.LOGGER.error("Failed to check if entity is invisible reflectively: ", e);
         }
         return false;
+    }
+
+    public static void setKeyFromString(Object keyMapping, String keyStr) {
+        if (keyMapping == null) return;
+        try {
+            if (VersionMappings.GetKeyFromStringMethod != null) {
+                Object key = VersionMappings.GetKeyFromStringMethod.invoke(null, keyStr);
+                if (key != null) {
+                    java.lang.reflect.Method setKeyMethod = null;
+                    Class<?> current = keyMapping.getClass();
+                    while (current != null && current != Object.class) {
+                        for (java.lang.reflect.Method m : current.getMethods()) {
+                            if (m.getName().equals("setKey") || m.getName().equals("method_1431")) {
+                                if (m.getParameterTypes().length == 1 && m.getParameterTypes()[0].isAssignableFrom(key.getClass())) {
+                                    setKeyMethod = m;
+                                    break;
+                                }
+                            }
+                        }
+                        if (setKeyMethod != null) break;
+                        current = current.getSuperclass();
+                    }
+                    if (setKeyMethod != null) {
+                        setKeyMethod.invoke(keyMapping, key);
+                        ToggleOffhand.LOGGER.info("Successfully set key from string reflectively: " + keyStr);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            ToggleOffhand.LOGGER.error("Failed to set key from string reflectively: ", e);
+        }
     }
 }

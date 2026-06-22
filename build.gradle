@@ -22,6 +22,10 @@ dependencies {
 
 	// Fabric Loader
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 loom {
@@ -40,7 +44,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 17
 }
 
 java {
@@ -49,8 +53,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
@@ -88,4 +92,8 @@ publishing {
 		// Notice that this block does NOT have the same function as the block in the top level.
 		// The repositories here will be used for publishing your artifact, not for retrieving dependencies.
 	}
+}
+
+test {
+	useJUnitPlatform()
 }

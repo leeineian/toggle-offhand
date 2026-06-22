@@ -15,6 +15,6 @@ config="toggle_offhand.mixins.json"
 [[dependencies.toggle_offhand]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.21,)"
+versionRange="[1.18.2,)"
 ordering="NONE"
 side="CLIENT"
